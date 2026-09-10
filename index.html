@@ -191,6 +191,44 @@
           <span>종류/대상</span>
           <input id="species" value="여우" />
         </label>
+
+        <label class="field"><span>성별</span><select id="gender"><option>미지정</option><option>여성</option><option>남성</option><option>중성</option><option>기타</option></select></label>
+        <label class="field"><span>연령</span><input id="age" placeholder="예: 성인 25세, 노년, 미지정" value="미지정"></label>
+        <label class="field"><span>헤어 스타일</span><input id="hairStyle" placeholder="예: 짧은 곱슬머리, 긴 생머리, 해당 없음" value="미지정"></label>
+        <label class="field"><span>체형</span><select id="bodyBuild"><option>미지정</option><option>슬림</option><option>보통</option><option>곡선형</option><option>탄탄함</option><option>근육질</option><option>풍만함</option></select></label>
+        <details>
+          <summary style="padding:12px 0;cursor:pointer">체형 디테일 · 부위별 라인 / 근육량</summary>
+          <p class="tip">모든 성별에 공통으로 적용됩니다. 라인은 0(직선적)~100(부드러운 곡선·여성스러움), 근육량은 0(적음)~100(많음)입니다. 연령과 종에 어울리는 비율로 해석하며, 성별만으로 체형을 결정하지 않습니다.</p>
+          <fieldset style="border:1px solid var(--line);border-radius:12px;margin:12px 0;min-width:0"><legend>상체</legend>
+            <label class="field"><span>라인 <b id="upperLineVal">50</b></span><input id="upperLine" type="range" min="0" max="100" value="50"></label>
+            <label class="field"><span>근육량 <b id="upperMuscleVal">50</b></span><input id="upperMuscle" type="range" min="0" max="100" value="50"></label>
+          </fieldset>
+          <fieldset style="border:1px solid var(--line);border-radius:12px;margin:12px 0;min-width:0"><legend>하체</legend>
+            <label class="field"><span>라인 <b id="lowerLineVal">50</b></span><input id="lowerLine" type="range" min="0" max="100" value="50"></label>
+            <label class="field"><span>근육량 <b id="lowerMuscleVal">50</b></span><input id="lowerMuscle" type="range" min="0" max="100" value="50"></label>
+          </fieldset>
+          <fieldset style="border:1px solid var(--line);border-radius:12px;margin:12px 0;min-width:0"><legend>바스트</legend>
+            <label class="field"><span>라인 <b id="bustLineVal">50</b></span><input id="bustLine" type="range" min="0" max="100" value="50"></label>
+            <label class="field"><span>근육량 <b id="bustMuscleVal">50</b></span><input id="bustMuscle" type="range" min="0" max="100" value="50"></label>
+          </fieldset>
+          <fieldset style="border:1px solid var(--line);border-radius:12px;margin:12px 0;min-width:0"><legend>어깨</legend>
+            <label class="field"><span>라인 <b id="shouldersLineVal">50</b></span><input id="shouldersLine" type="range" min="0" max="100" value="50"></label>
+            <label class="field"><span>근육량 <b id="shouldersMuscleVal">50</b></span><input id="shouldersMuscle" type="range" min="0" max="100" value="50"></label>
+          </fieldset>
+          <fieldset style="border:1px solid var(--line);border-radius:12px;margin:12px 0;min-width:0"><legend>팔</legend>
+            <label class="field"><span>라인 <b id="armsLineVal">50</b></span><input id="armsLine" type="range" min="0" max="100" value="50"></label>
+            <label class="field"><span>근육량 <b id="armsMuscleVal">50</b></span><input id="armsMuscle" type="range" min="0" max="100" value="50"></label>
+          </fieldset>
+          <fieldset style="border:1px solid var(--line);border-radius:12px;margin:12px 0;min-width:0"><legend>허벅지</legend>
+            <label class="field"><span>라인 <b id="thighsLineVal">50</b></span><input id="thighsLine" type="range" min="0" max="100" value="50"></label>
+            <label class="field"><span>근육량 <b id="thighsMuscleVal">50</b></span><input id="thighsMuscle" type="range" min="0" max="100" value="50"></label>
+          </fieldset>
+          <fieldset style="border:1px solid var(--line);border-radius:12px;margin:12px 0;min-width:0"><legend>종아리</legend>
+            <label class="field"><span>라인 <b id="calvesLineVal">50</b></span><input id="calvesLine" type="range" min="0" max="100" value="50"></label>
+            <label class="field"><span>근육량 <b id="calvesMuscleVal">50</b></span><input id="calvesMuscle" type="range" min="0" max="100" value="50"></label>
+          </fieldset>
+        </details>
+
         <label class="field">
           <span>국가/문화권</span>
           <select id="country">
