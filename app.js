@@ -151,17 +151,32 @@ inputs.forEach(id=>qs(id).addEventListener("input",refresh));
 document.querySelectorAll(".lock").forEach(x=>x.addEventListener("change",refresh));
 qs("refStrength").addEventListener("input",refresh);
 
-qs("referenceInput").addEventListener("change",e=>{
-  const file=e.target.files[0];
-  if(!file) return;
-  const r=new FileReader();
-  r.onload=ev=>{
-    qs("referenceThumb").src=ev.target.result;
+let referenceLoadVersion = 0;
+async function registerReferenceImage(file){
+  const version=++referenceLoadVersion;
+  const status=message=>qs("referenceStatus").textContent=message;
+  if(!file.type.startsWith("image/"))return status("이미지 파일을 선택하세요.");
+  if(file.size>20*1024*1024)return status("20MB 이하 이미지를 선택하세요.");
+  const url=URL.createObjectURL(file);
+  try{
+    const img=new Image();img.src=url;await img.decode();
+    if(version!==referenceLoadVersion)return;
+    const reader=new FileReader();
+    const data=await new Promise((resolve,reject)=>{reader.onload=()=>resolve(reader.result);reader.onerror=reject;reader.readAsDataURL(file);});
+    if(version!==referenceLoadVersion)return;
+    qs("referenceThumb").src=data;
     qs("referenceThumb").classList.remove("hidden");
     qs("uploadContent").classList.add("hidden");
-    qs("mainPreview").innerHTML=`<img src="${ev.target.result}" style="width:100%;height:100%;object-fit:contain">`;
-  };
-  r.readAsDataURL(file);
+    const preview=new Image();preview.src=data;preview.alt="레퍼런스 이미지 미리보기";
+    preview.style.cssText="width:100%;height:100%;object-fit:contain";
+    qs("mainPreview").replaceChildren(preview);
+    status("레퍼런스 이미지를 등록했습니다.");
+  }catch{if(version===referenceLoadVersion)status("이미지를 읽을 수 없습니다. 다른 이미지를 선택하세요.");}
+  finally{URL.revokeObjectURL(url);}
+}
+qs("referenceInput").addEventListener("change",e=>{
+  if(e.target.files[0])registerReferenceImage(e.target.files[0]);
+  e.target.value="";
 });
 
 qs("btnAnalyze").addEventListener("click",()=>{
@@ -248,7 +263,12 @@ async function registerStudioImage(file){
 qs("studioFile").addEventListener("change",e=>{if(e.target.files[0])registerStudioImage(e.target.files[0]);e.target.value="";});
 document.addEventListener("paste",e=>{
   const file=[...(e.clipboardData?.items||[])].find(item=>item.kind==="file"&&item.type.startsWith("image/"))?.getAsFile();
-  if(file){e.preventDefault();registerStudioImage(file);}
+  if(file){
+    e.preventDefault();
+    const inStudio=e.target instanceof Element && e.target.closest("#videoStudio");
+    if(!inStudio && !qs("referenceSection").classList.contains("hidden"))registerReferenceImage(file);
+    else registerStudioImage(file);
+  }
 });
 qs("pasteImage").addEventListener("click",async()=>{
   try{
