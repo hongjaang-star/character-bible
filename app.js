@@ -12,7 +12,8 @@ const periods = {
 };
 
 const qs = id => document.getElementById(id);
-const inputs = ["type","species","country","period","renderStyle","characterStyle","cultureLevel","silhouette","headRatio","eyeRatio","bodyRatio","face","eyes","ears","tail","palette","outfit","accent","prop","lineStyle","shading","texture","personality","expressions","motions"];
+const bodyParts = {"upper":"상체","lower":"하체","bust":"바스트","shoulders":"어깨","arms":"팔","thighs":"허벅지","calves":"종아리"};
+const inputs = ["gender","age","hairStyle","bodyBuild","upperLine","upperMuscle","lowerLine","lowerMuscle","bustLine","bustMuscle","shouldersLine","shouldersMuscle","armsLine","armsMuscle","thighsLine","thighsMuscle","calvesLine","calvesMuscle","type","species","country","period","renderStyle","characterStyle","cultureLevel","silhouette","headRatio","eyeRatio","bodyRatio","face","eyes","ears","tail","palette","outfit","accent","prop","lineStyle","shading","texture","personality","expressions","motions"];
 
 function updatePeriods(){
   const country = qs("country").value;
@@ -25,7 +26,7 @@ function currentData(){
   return {
     character_id:characterId,
     concept:{
-      type:qs("type").value,
+      type:qs("type").value,gender:qs("gender").value,age:qs("age").value,hair_style:qs("hairStyle").value,body_build:qs("bodyBuild").value,
       species:qs("species").value,
       country:qs("country").value,
       period:qs("period").value,
@@ -41,6 +42,7 @@ function currentData(){
     },
     anatomy:{
       silhouette:qs("silhouette").value,
+body_details:Object.fromEntries(Object.keys(bodyParts).map(k=>[k,{line:Number(qs(k+"Line").value),muscle:Number(qs(k+"Muscle").value)}])),
       head_ratio:Number(qs("headRatio").value),
       eye_ratio:Number(qs("eyeRatio").value),
       body_ratio:Number(qs("bodyRatio").value)
@@ -73,6 +75,10 @@ function buildPrompt(d){
   return `Create a production-ready character bible for a ${d.concept.species}.
 
 [CORE CONCEPT]
+Gender: ${d.concept.gender}
+Age: ${d.concept.age}
+Hair: ${d.concept.hair_style}
+Body build: ${d.concept.body_build}
 Country / cultural frame: ${d.concept.country}
 Period / world: ${d.concept.period}
 Cultural treatment: ${d.concept.culture_level}
@@ -91,7 +97,7 @@ Head proportion: ${d.anatomy.head_ratio}/100
 Eye proportion: ${d.anatomy.eye_ratio}/100
 Body proportion: ${d.anatomy.body_ratio}/100
 
-[IDENTITY ANCHORS — KEEP CONSISTENT]
+[BODY DETAILS]\nLine: 0 = straight, 100 = soft feminine curves. Muscle: 0 = low, 100 = high. Apply to all genders with age- and species-appropriate proportions.\n${Object.entries(d.anatomy.body_details).map(([k,v])=>`${bodyParts[k]}: line ${v.line}/100, muscle ${v.muscle}/100`).join("\n")}\n\n[IDENTITY ANCHORS — KEEP CONSISTENT]
 Face: ${d.identity.face}
 Eyes: ${d.identity.eyes}
 Ears: ${d.identity.ears}
@@ -127,6 +133,7 @@ Only viewpoint, facial expression and pose may change.${qs("naturalEdit").value.
 }
 
 function refresh(){
+for(const k of Object.keys(bodyParts))for(const s of ["Line","Muscle"])qs(k+s+"Val").textContent=qs(k+s).value;
   const d = currentData();
   qs("characterTitle").textContent = `${d.concept.species} · ${d.concept.country} ${d.concept.period}`;
   qs("summaryText").textContent = `${d.style.render} / ${d.style.character_style} / ${d.anatomy.silhouette}`;
@@ -184,7 +191,7 @@ qs("referenceInput").addEventListener("change",e=>{
 function buildReferenceAnalysisPrompt(){
   const base=currentData();
   const choices={};
-  const selectPaths={type:"concept.type",country:"concept.country",renderStyle:"style.render",characterStyle:"style.character_style",cultureLevel:"concept.culture_level",silhouette:"anatomy.silhouette",face:"identity.face",eyes:"identity.eyes",palette:"style.palette",lineStyle:"style.line",shading:"style.shading",texture:"style.texture"};
+  const selectPaths={gender:"concept.gender",bodyBuild:"concept.body_build",type:"concept.type",country:"concept.country",renderStyle:"style.render",characterStyle:"style.character_style",cultureLevel:"concept.culture_level",silhouette:"anatomy.silhouette",face:"identity.face",eyes:"identity.eyes",palette:"style.palette",lineStyle:"style.line",shading:"style.shading",texture:"style.texture"};
   for(const [id,key] of Object.entries(selectPaths)){
     choices[key]=[...qs(id).options].map(option=>({value:option.value,label:option.textContent}));
   }
@@ -192,7 +199,7 @@ function buildReferenceAnalysisPrompt(){
   const groups={
     style:["style.render","style.character_style","style.line","style.shading","style.texture"],
     palette:["style.palette"],
-    shape:["concept.type","concept.species","anatomy","identity"],
+    shape:["concept.type","concept.species","concept.gender","concept.age","concept.hair_style","concept.body_build","anatomy","identity"],
     costume:["wardrobe"],
     world:["concept.country","concept.period","concept.culture_level"]
   };
@@ -210,6 +217,7 @@ ${JSON.stringify(groups,null,2)}
 locks는 이후 제작의 고정 항목 목록이므로 그대로 반환하세요. 이번 분석 범위는 위 그룹 선택을 따릅니다.
 
 [허용 값]
+성별과 연령이 불확실하면 미지정을 유지하세요. anatomy.body_details의 각 부위 line과 muscle은 0~100 정수입니다. line은 직선적(0)~부드러운 곡선·여성스러움(100), muscle은 적음(0)~많음(100)이며 모든 성별에 공통 적용합니다.
 다음 경로는 value 중 하나만 사용하세요. label은 의미 설명이며 JSON에 추가하지 마세요.
 ${JSON.stringify(choices,null,2)}
 concept.period는 concept.country에 대응하는 아래 목록 중 하나여야 합니다:
@@ -394,6 +402,7 @@ refreshStudio();
 
 /* Validate the complete document before touching any controls. */
 const bibleFieldPaths = {
+gender:"concept.gender",age:"concept.age",hairStyle:"concept.hair_style",bodyBuild:"concept.body_build",
  type:"concept.type",species:"concept.species",country:"concept.country",period:"concept.period",cultureLevel:"concept.culture_level",
  renderStyle:"style.render",characterStyle:"style.character_style",lineStyle:"style.line",shading:"style.shading",texture:"style.texture",palette:"style.palette",
  silhouette:"anatomy.silhouette",headRatio:"anatomy.head_ratio",eyeRatio:"anatomy.eye_ratio",bodyRatio:"anatomy.body_ratio",
@@ -416,7 +425,15 @@ function validateBibleImport(data){
     }else if(typeof value!==typeof template)throw Error(path+"의 자료형이 올바르지 않습니다.");
     else if(typeof value==="string"&&value.length>10000)throw Error(path+" 내용이 너무 깁니다.");
   }
+  if(object(data)&&object(data.concept)&&object(data.anatomy)){
+    for(const k of ["gender","age","hair_style","body_build"])if(!Object.hasOwn(data.concept,k))data.concept[k]="미지정";
+    if(!Object.hasOwn(data.anatomy,"body_details"))data.anatomy.body_details=Object.fromEntries(Object.keys(bodyParts).map(k=>[k,{line:50,muscle:50}]));
+  }
   structure(data,currentData());
+  for(const k of Object.keys(bodyParts))for(const s of ["line","muscle"]){
+    const v=data.anatomy.body_details[k][s];
+    if(!Number.isInteger(v)||v<0||v>100)throw Error("body_details."+k+"."+s+"는 0~100 정수여야 합니다.");
+  }
   if(!data.character_id.trim())throw Error("character_id를 입력하세요.");
   for(const [id,path] of Object.entries(bibleFieldPaths)){
     const [group,key]=path.split(".");const value=data[group][key];const control=qs(id);
@@ -444,6 +461,7 @@ qs("applyBibleJson").addEventListener("click",()=>{
     validateBibleImport(data);
     qs("country").value=data.concept.country;updatePeriods();
     for(const [id,path] of Object.entries(bibleFieldPaths)){const [group,key]=path.split(".");qs(id).value=data[group][key];}
+    for(const k of Object.keys(bodyParts)){qs(k+"Line").value=data.anatomy.body_details[k].line;qs(k+"Muscle").value=data.anatomy.body_details[k].muscle;}
     characterId=data.character_id;
     document.querySelectorAll(".lock").forEach(x=>x.checked=data.locks.includes(x.value));
     qs("refStrength").value=data.reference.strength;
