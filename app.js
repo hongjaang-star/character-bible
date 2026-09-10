@@ -223,8 +223,8 @@ reference.strength는 현재 10~95 정수를 유지하고 reference.enabled는 �
 아래 JSON과 정확히 같은 키, 중첩 구조, 자료형을 사용하고 모든 필드를 반환하세요.
 숫자를 문자열로 바꾸지 마세요. character_id, acting, locks, reference는 현재 값 그대로 유지하세요.
 주석, 설명, 마크다운 코드 블록 없이 유효한 JSON 객체만 반환하세요.
-파일 생성이 가능하면 동일한 JSON을 UTF-8 character_bible.json 다운로드 파일로 제공하세요. 파일 생성이 불가능하면 JSON 본문만 반환하세요.
-사용자가 결과 JSON 파일을 스튜디오에 업로드하여 설정에 적용할 예정입니다.
+사용자가 바로 복사할 수 있도록 JSON 본문으로 반환하세요. 파일 생성은 필요하지 않습니다.
+사용자가 응답 JSON을 스튜디오의 텍스트 박스에 붙여넣고 설정에 적용할 예정입니다.
 
 [현재 JSON — 전체 응답 구조]
 ${JSON.stringify(base,null,2)}`;
@@ -427,18 +427,16 @@ function validateBibleImport(data){
   if(data.locks.some(x=>!locks.includes(x))||new Set(data.locks).size!==data.locks.length)throw Error("locks에 지원하지 않거나 중복된 항목이 있습니다.");
   return data;
 }
-let importVersion=0;
-qs("bibleJsonInput").addEventListener("change",async e=>{
-  const file=e.target.files[0];e.target.value="";if(!file)return;
-  const version=++importVersion;const status=qs("bibleImportStatus");
+qs("applyBibleJson").addEventListener("click",()=>{
+  const status=qs("bibleImportStatus");
   try{
-    if(file.size>1024*1024)throw Error("1MB 이하 JSON 파일을 선택하세요.");
-    let text=(await file.text()).replace(/^\uFEFF/,"").trim();
+    let text=qs("bibleJsonInput").value.replace(/^\uFEFF/,"").trim();
+    if(!text)throw Error("분석 JSON을 먼저 붙여넣으세요.");
+    if(new Blob([text]).size>1024*1024)throw Error("JSON은 1MB 이하로 입력하세요.");
     // Accept a single JSON code fence copied from an AI response.
     if(text.startsWith("```"))text=text.replace(/^```(?:json)?\s*\n?([\s\S]*?)\n?```$/i,"$1").trim();
-    let data;try{data=JSON.parse(text);}catch{throw Error("JSON 문법을 확인하세요. 설명 문장 없이 JSON 객체만 저장해야 합니다.");}
+    let data;try{data=JSON.parse(text);}catch{throw Error("JSON 문법을 확인하세요. 설명 문장 없이 JSON 객체만 붙여넣으세요.");}
     validateBibleImport(data);
-    if(version!==importVersion)return;
     qs("country").value=data.concept.country;updatePeriods();
     for(const [id,path] of Object.entries(bibleFieldPaths)){const [group,key]=path.split(".");qs(id).value=data[group][key];}
     characterId=data.character_id;
@@ -450,5 +448,5 @@ qs("bibleJsonInput").addEventListener("change",async e=>{
     refresh();refreshStudio();
     if(!qs("referenceAnalysisOutput").hidden)qs("referenceAnalysisPrompt").value=buildReferenceAnalysisPrompt();
     status.textContent="JSON을 적용했습니다. 캐릭터 설정, 생성 프롬프트와 JSON 미리보기를 갱신했습니다.";
-  }catch(error){if(version===importVersion)status.textContent="불러오기 실패: "+error.message+" 기존 설정은 유지됩니다.";}
+  }catch(error){status.textContent="불러오기 실패: "+error.message+" 기존 설정은 유지됩니다.";}
 });
