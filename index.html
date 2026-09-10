@@ -343,12 +343,13 @@
       <section class="option-section natural-edit">
         <div class="section-head"><span>10</span><h3>AI 수정 요청</h3></div>
         <textarea aria-label="AI 수정 요청" id="naturalEdit" rows="4" placeholder="예: 지금 스타일은 유지하고 눈을 조금 작게, 체형은 더 날렵하게"></textarea>
-        <button id="btnNaturalApply" class="btn secondary full">옵션 변경안 적용</button>
-        <div class="tip"><strong>사용 팁</strong><p>자연어 수정은 잠금되지 않은 항목만 바꾸도록 설계하는 것이 안전합니다. 실제 AI 연결 시 변경 전/후 값을 먼저 보여주는 승인 단계를 권장합니다.</p></div>
+        <button id="btnNaturalApply" class="btn secondary full">수정 요청을 프롬프트에 반영</button>
+        <div class="tip"><strong>사용 팁</strong><p>입력한 요청은 선택 옵션과 함께 최종 프롬프트에 포함됩니다. 실제 수정은 GPT/Gemini가 수행하며, 이 페이지의 옵션값은 자동 변경되지 않습니다. 잠근 특징을 바꾸려면 해당 잠금을 먼저 해제하세요.</p></div>
       </section>
 
       <div class="sticky-actions">
-        <button id="btnGeneratePrompt" class="btn primary full">프롬프트 갱신</button>
+        <button id="btnGeneratePrompt" class="btn primary full">프롬프트 갱신 및 복사</button>
+        <p id="promptStatus" role="status" aria-live="polite"></p>
       </div>
     </aside>
   </main>
