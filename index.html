@@ -1,0 +1,322 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Character Bible Studio v1</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div>
+      <div class="eyebrow">AI STORY STUDIO</div>
+      <h1>Character Bible Studio</h1>
+    </div>
+    <div class="top-actions">
+      <button id="btnGuide" class="btn ghost">사용법</button>
+      <button id="btnExport" class="btn primary">JSON 내보내기</button>
+    </div>
+  </header>
+
+  <main class="layout">
+    <section class="workspace">
+      <div class="card hero">
+        <div>
+          <div class="step-badge">CHARACTER PREVIEW</div>
+          <h2 id="characterTitle">새 캐릭터</h2>
+          <p id="summaryText">우측 옵션에서 큰 스타일을 먼저 정한 뒤, 세부 옵션으로 좁혀가세요.</p>
+        </div>
+        <div class="preview-grid">
+          <div class="preview-box large" id="mainPreview">
+            <div class="placeholder">
+              <div class="placeholder-icon">✦</div>
+              <strong>Master Reference</strong>
+              <span>생성 전 미리보기 영역</span>
+            </div>
+          </div>
+          <div class="mini-grid">
+            <div class="preview-box">Front</div>
+            <div class="preview-box">3/4</div>
+            <div class="preview-box">Side</div>
+            <div class="preview-box">Back</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="section-title-row">
+          <div>
+            <div class="step-badge">PROMPT COMPILER</div>
+            <h3>생성 프롬프트 미리보기</h3>
+          </div>
+          <button id="btnCopyPrompt" class="btn ghost small">복사</button>
+        </div>
+        <pre id="promptPreview" class="prompt-box"></pre>
+      </div>
+
+      <div class="card">
+        <div class="section-title-row">
+          <div>
+            <div class="step-badge">STRUCTURED DATA</div>
+            <h3>Character Bible JSON</h3>
+          </div>
+        </div>
+        <pre id="jsonPreview" class="prompt-box json"></pre>
+      </div>
+    </section>
+
+    <aside class="options-panel">
+      <div class="panel-header">
+        <div>
+          <div class="eyebrow">OPTIONS</div>
+          <h2>캐릭터 설정</h2>
+        </div>
+        <button id="btnReset" class="icon-btn" title="초기화">↺</button>
+      </div>
+
+      <div class="mode-switch">
+        <button class="mode active" data-mode="manual">처음부터</button>
+        <button class="mode" data-mode="reference">레퍼런스</button>
+        <button class="mode" data-mode="clone">기존 Bible</button>
+      </div>
+
+      <section class="option-section reference-section hidden" id="referenceSection">
+        <div class="section-head">
+          <span>00</span>
+          <h3>레퍼런스 분석</h3>
+        </div>
+        <label class="upload-box">
+          <input type="file" id="referenceInput" accept="image/*" />
+          <div id="uploadContent">
+            <strong>+ 레퍼런스 이미지</strong>
+            <span>이미지 스타일을 옵션값으로 변환</span>
+          </div>
+          <img id="referenceThumb" class="hidden" alt="reference preview"/>
+        </label>
+        <div class="check-grid">
+          <label><input type="checkbox" checked data-ref="style"> 스타일</label>
+          <label><input type="checkbox" checked data-ref="palette"> 색상</label>
+          <label><input type="checkbox" checked data-ref="shape"> 비율</label>
+          <label><input type="checkbox" data-ref="costume"> 의상</label>
+          <label><input type="checkbox" data-ref="world"> 세계관</label>
+        </div>
+        <label class="field">
+          <span>스타일 영향도 <b id="refStrengthLabel">70%</b></span>
+          <input type="range" id="refStrength" min="10" max="95" value="70" />
+        </label>
+        <button id="btnAnalyze" class="btn secondary full">옵션값으로 분석</button>
+        <div class="tip">
+          <strong>사용 팁</strong>
+          <p>스타일만 재사용하려면 ‘스타일·색상·질감’만 선택하세요. 캐릭터 외형까지 선택하면 새 캐릭터가 원본 형태를 더 강하게 따라갑니다.</p>
+        </div>
+      </section>
+
+      <section class="option-section">
+        <div class="section-head"><span>01</span><h3>기본 컨셉</h3></div>
+        <label class="field">
+          <span>캐릭터 유형</span>
+          <select id="type">
+            <option value="animal">동물</option>
+            <option value="human">인간</option>
+            <option value="anthro">의인화 동물</option>
+            <option value="fantasy">판타지</option>
+          </select>
+        </label>
+        <label class="field">
+          <span>종류/대상</span>
+          <input id="species" value="여우" />
+        </label>
+        <label class="field">
+          <span>국가/문화권</span>
+          <select id="country">
+            <option>한국</option><option>일본</option><option>중국</option><option>인도</option>
+            <option>그리스</option><option>프랑스</option><option>영국</option><option>중동</option><option>기타</option>
+          </select>
+        </label>
+        <label class="field">
+          <span>시대/세계관</span>
+          <select id="period"></select>
+        </label>
+        <div class="tip">
+          <strong>사용 팁</strong>
+          <p>국가와 시대를 먼저 정하면 아래 스타일·의상·색상 추천 범위가 자동으로 좁혀집니다. 큰 방향을 자주 바꾸지 않는 것이 일관성에 유리합니다.</p>
+        </div>
+      </section>
+
+      <section class="option-section">
+        <div class="section-head"><span>02</span><h3>비주얼 스타일</h3></div>
+        <label class="field">
+          <span>렌더링 스타일</span>
+          <select id="renderStyle">
+            <option>수채화 그림책</option>
+            <option>2D 애니메이션</option>
+            <option>3D 애니메이션</option>
+            <option>고전 삽화</option>
+            <option>색연필</option>
+            <option>전통 먹선+담채</option>
+            <option>종이 공예</option>
+            <option>클레이</option>
+          </select>
+        </label>
+        <label class="field">
+          <span>캐릭터 표현</span>
+          <select id="characterStyle">
+            <option>Storybook Cute</option>
+            <option>Semi-realistic</option>
+            <option>Cartoon</option>
+            <option>Chibi</option>
+            <option>Feature Animation</option>
+          </select>
+        </label>
+        <label class="field">
+          <span>문화 표현 수준</span>
+          <select id="cultureLevel">
+            <option>동화적 재해석</option>
+            <option>자유로운 판타지</option>
+            <option>역사 기반</option>
+            <option>높은 역사 고증</option>
+          </select>
+        </label>
+        <div class="tip">
+          <strong>사용 팁</strong>
+          <p>‘렌더링 스타일’은 그림 전체의 질감을, ‘캐릭터 표현’은 비율과 귀여움 정도를 결정합니다. 둘은 분리해서 선택하세요.</p>
+        </div>
+      </section>
+
+      <section class="option-section">
+        <div class="section-head"><span>03</span><h3>캐릭터 형태</h3></div>
+        <label class="field">
+          <span>실루엣</span>
+          <select id="silhouette">
+            <option>슬림 + 큰 꼬리</option>
+            <option>둥글고 친근함</option>
+            <option>키가 크고 날렵함</option>
+            <option>작고 귀여움</option>
+            <option>넓고 안정적</option>
+          </select>
+        </label>
+        <label class="field range-field">
+          <span>머리 크기 <b id="headVal">68</b></span>
+          <input type="range" id="headRatio" min="20" max="90" value="68" />
+        </label>
+        <label class="field range-field">
+          <span>눈 크기 <b id="eyeVal">72</b></span>
+          <input type="range" id="eyeRatio" min="20" max="90" value="72" />
+        </label>
+        <label class="field range-field">
+          <span>체형 <b id="bodyVal">45</b></span>
+          <input type="range" id="bodyRatio" min="20" max="90" value="45" />
+        </label>
+        <div class="tip">
+          <strong>사용 팁</strong>
+          <p>영상 일관성을 위해 머리·눈·체형 수치는 한 번 승인한 뒤 가급적 잠그세요. 장면마다 이 값을 바꾸면 같은 캐릭터로 인식되기 어렵습니다.</p>
+        </div>
+      </section>
+
+      <section class="option-section">
+        <div class="section-head"><span>04</span><h3>Identity</h3></div>
+        <label class="field"><span>얼굴형</span><select id="face"><option>부드러운 삼각형</option><option>둥근형</option><option>길쭉한형</option></select></label>
+        <label class="field"><span>눈</span><select id="eyes"><option>큰 갈색 아몬드형</option><option>둥근 큰 눈</option><option>작고 날카로운 눈</option></select></label>
+        <label class="field"><span>귀</span><input id="ears" value="큰 삼각형 귀, 끝은 짙은 갈색" /></label>
+        <label class="field"><span>꼬리/특징</span><input id="tail" value="풍성한 꼬리, 끝은 흰색" /></label>
+        <div class="tip">
+          <strong>사용 팁</strong>
+          <p>얼굴형·눈·귀·꼬리처럼 실루엣에 영향을 주는 특징은 Identity Anchor입니다. 영상 장면 프롬프트에서도 고정값으로 재사용됩니다.</p>
+        </div>
+      </section>
+
+      <section class="option-section">
+        <div class="section-head"><span>05</span><h3>색상 팔레트</h3></div>
+        <label class="field"><span>팔레트 프리셋</span>
+          <select id="palette"><option>따뜻한 자연색</option><option>파스텔</option><option>전통 색감</option><option>차분한 색</option><option>선명한 색</option></select>
+        </label>
+        <div class="swatches" id="swatches">
+          <button style="--c:#D96832"></button><button style="--c:#F1D4A8"></button>
+          <button style="--c:#5A382B"></button><button style="--c:#6A452D"></button><button style="--c:#F7E7D0"></button>
+        </div>
+        <div class="tip"><strong>사용 팁</strong><p>팔레트는 캐릭터와 세계관을 연결하는 핵심 요소입니다. 한 작품에서는 4~6개의 대표색을 유지하는 것을 권장합니다.</p></div>
+      </section>
+
+      <section class="option-section">
+        <div class="section-head"><span>06</span><h3>의상 / 소품</h3></div>
+        <label class="field"><span>기본 의상</span><input id="outfit" value="한복에서 영감을 받은 올리브색 조끼" /></label>
+        <label class="field"><span>포인트</span><input id="accent" value="작은 빨간 목도리" /></label>
+        <label class="field"><span>대표 소품</span><input id="prop" value="갈색 가죽 주머니" /></label>
+        <div class="tip"><strong>사용 팁</strong><p>대표 소품은 캐릭터 인식에 도움을 줍니다. 장면마다 바뀌는 소품과 ‘항상 유지할 소품’을 구분해서 관리하세요.</p></div>
+      </section>
+
+      <section class="option-section">
+        <div class="section-head"><span>07</span><h3>세부 표현</h3></div>
+        <label class="field"><span>선</span><select id="lineStyle"><option>Soft Brown</option><option>Thin Ink</option><option>No Outline</option><option>Hand-drawn Pencil</option></select></label>
+        <label class="field"><span>명암</span><select id="shading"><option>Soft Painterly</option><option>Soft Cel</option><option>Flat</option><option>Minimal</option></select></label>
+        <label class="field"><span>질감</span><select id="texture"><option>Watercolor Paper</option><option>Clean Digital</option><option>Colored Pencil</option><option>Canvas</option></select></label>
+        <div class="tip"><strong>사용 팁</strong><p>이 영역은 렌더링 스타일에서 자동 추천되도록 두고, 특별한 이유가 있을 때만 수정하는 것이 가장 안정적입니다.</p></div>
+      </section>
+
+      <section class="option-section">
+        <div class="section-head"><span>08</span><h3>성격 / 표정 / 동작</h3></div>
+        <label class="field"><span>성격</span><input id="personality" value="영리함, 호기심, 약간의 허영심" /></label>
+        <label class="field"><span>기본 표정</span><input id="expressions" value="무표정, 기쁨, 슬픔, 화남, 놀람, 두려움" /></label>
+        <label class="field"><span>기본 동작</span><input id="motions" value="서기, 걷기, 달리기, 앉기, 점프, 가리키기" /></label>
+        <div class="tip"><strong>사용 팁</strong><p>여기서 만드는 표정·동작은 Character Bible용입니다. 실제 영상 생성 때는 장면에 필요한 1~2개의 동작/표정 레퍼런스만 선택해 전달하는 것이 효율적입니다.</p></div>
+      </section>
+
+      <section class="option-section lock-section">
+        <div class="section-head"><span>09</span><h3>Character Lock</h3></div>
+        <div class="check-grid">
+          <label><input type="checkbox" checked class="lock" value="얼굴형"> 얼굴형</label>
+          <label><input type="checkbox" checked class="lock" value="눈"> 눈</label>
+          <label><input type="checkbox" checked class="lock" value="신체비율"> 신체비율</label>
+          <label><input type="checkbox" checked class="lock" value="색상"> 색상</label>
+          <label><input type="checkbox" checked class="lock" value="귀/꼬리"> 귀/꼬리</label>
+          <label><input type="checkbox" checked class="lock" value="의상"> 의상</label>
+          <label><input type="checkbox" checked class="lock" value="대표소품"> 대표소품</label>
+        </div>
+        <div class="tip"><strong>사용 팁</strong><p>승인된 캐릭터는 핵심 Identity를 잠그고, 이후에는 ‘동작·표정·카메라’만 바꾸는 것이 장면 간 일관성을 가장 잘 유지합니다.</p></div>
+      </section>
+
+      <section class="option-section natural-edit">
+        <div class="section-head"><span>10</span><h3>AI 수정 요청</h3></div>
+        <textarea id="naturalEdit" rows="4" placeholder="예: 지금 스타일은 유지하고 눈을 조금 작게, 체형은 더 날렵하게"></textarea>
+        <button id="btnNaturalApply" class="btn secondary full">옵션 변경안 적용</button>
+        <div class="tip"><strong>사용 팁</strong><p>자연어 수정은 잠금되지 않은 항목만 바꾸도록 설계하는 것이 안전합니다. 실제 AI 연결 시 변경 전/후 값을 먼저 보여주는 승인 단계를 권장합니다.</p></div>
+      </section>
+
+      <div class="sticky-actions">
+        <button id="btnGeneratePrompt" class="btn primary full">프롬프트 갱신</button>
+      </div>
+    </aside>
+  </main>
+
+  <dialog id="guideDialog">
+    <div class="dialog-head">
+      <div>
+        <div class="eyebrow">QUICK GUIDE</div>
+        <h2>가장 효율적인 사용법</h2>
+      </div>
+      <button id="btnCloseGuide" class="icon-btn">×</button>
+    </div>
+    <div class="guide-body">
+      <div class="guide-step"><b>1</b><div><strong>큰 방향부터 결정</strong><p>캐릭터 유형 → 국가 → 시대 → 렌더링 스타일 → 캐릭터 표현 순으로 선택합니다.</p></div></div>
+      <div class="guide-step"><b>2</b><div><strong>Identity를 확정</strong><p>실루엣, 얼굴, 눈, 귀, 꼬리, 비율, 대표색을 정한 뒤 Character Lock으로 잠급니다.</p></div></div>
+      <div class="guide-step"><b>3</b><div><strong>레퍼런스는 분석 후 재사용</strong><p>마음에 드는 이미지는 매번 직접 따라 만들지 말고 스타일/비율/색상 옵션값으로 변환해 Style Profile처럼 재사용합니다.</p></div></div>
+      <div class="guide-step"><b>4</b><div><strong>Bible은 풍부하게, 영상 입력은 간결하게</strong><p>캐릭터 Bible에는 Front/3·4/Side/Back, 표정, 동작을 보관하되 실제 영상 툴에는 장면에 가장 필요한 1~2장만 전달합니다.</p></div></div>
+      <div class="guide-step"><b>5</b><div><strong>영상에서는 고정값을 건드리지 않기</strong><p>Identity·팔레트·의상은 유지하고 장면별로 Action, Emotion, Camera만 바꿉니다.</p></div></div>
+      <div class="guide-step"><b>6</b><div><strong>비용 절감 원칙</strong><p>레퍼런스 분석과 Master Bible 생성은 캐릭터당 한 번만 하고, 이후 장면에서는 저장된 옵션과 선택된 1~2개 Reference를 재사용합니다.</p></div></div>
+
+      <div class="best-practice">
+        <strong>권장 표준</strong>
+        <pre>Character Bible 보관:
+Front + 3/4 + Side + Back + Expressions + Motions
+
+실제 영상 생성:
+Reference 1 = Identity용
+Reference 2 = 현재 각도/동작용
+Text = 고정 Character DNA + Scene + Action + Camera</pre>
+      </div>
+    </div>
+  </dialog>
+
+  <script src="app.js"></script>
+</body>
+</html>
