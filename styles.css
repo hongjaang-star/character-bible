@@ -60,3 +60,45 @@ dialog::backdrop{background:rgba(19,40,43,.48)}
 .guide-body{padding:20px;max-height:70vh;overflow:auto}.guide-step{display:grid;grid-template-columns:34px 1fr;gap:12px;margin-bottom:14px}.guide-step>b{width:30px;height:30px;border-radius:10px;display:grid;place-items:center;background:#e8f5f1;color:var(--ink)}.guide-step p{margin:4px 0;color:var(--muted);line-height:1.6}
 .best-practice{margin-top:20px;background:#f5f7f4;border-radius:14px;padding:14px}.best-practice pre{white-space:pre-wrap;line-height:1.55;font-size:12px}
 @media(max-width:980px){.layout{grid-template-columns:1fr}.options-panel{position:relative;top:auto;height:auto;border-left:0;border-top:1px solid var(--line)}.hero{grid-template-columns:1fr}.topbar{position:relative}.preview-grid{min-height:260px}}
+
+/* Keep long user input inside grid and flex items. */
+.workspace,.options-panel,.hero>div,.preview-grid,.section-title-row>div{min-width:0}
+.hero h2,.hero p,.prompt-box,.best-practice pre{overflow-wrap:anywhere}
+.section-title-row{gap:12px}
+.btn,.icon-btn,.mode{min-height:44px}
+.icon-btn{min-width:44px;flex-shrink:0}
+input,select,textarea{min-width:0;font-size:16px}
+input[type=range]{min-height:44px}
+.check-grid label{min-height:44px;display:flex;align-items:center}
+.check-grid input{flex-shrink:0}
+button:focus-visible,a:focus-visible{outline:3px solid var(--ink);outline-offset:3px}
+textarea{resize:vertical}
+.mobile-nav{display:none}
+dialog{max-height:calc(100dvh - 24px)}
+.dialog-head{gap:12px}
+.guide-body{max-height:calc(100dvh - 150px)}
+@media(max-width:980px){
+  .topbar{height:auto;min-height:76px;flex-wrap:wrap;gap:12px;padding:16px}
+  .mobile-nav{display:flex;gap:8px;padding:12px 16px;background:var(--bg);position:sticky;top:0;z-index:10}
+  .mobile-nav a{flex:1;display:flex;align-items:center;justify-content:center;min-height:44px;padding:10px;border:1px solid var(--line);border-radius:12px;background:white;color:var(--ink);font-weight:800;text-decoration:none}
+  .options-panel{grid-row:1;overflow:visible}
+  #settings,#results{scroll-margin-top:80px}
+  .sticky-actions{position:static;padding-bottom:max(12px,env(safe-area-inset-bottom))}
+}
+@media(max-width:600px){
+  .topbar h1{font-size:20px;overflow-wrap:anywhere}
+  .top-actions{width:100%}
+  .top-actions .btn{flex:1}
+  .workspace{padding:12px;gap:12px}
+  .options-panel{padding:16px}
+  .card{padding:16px;border-radius:16px}
+  .hero{gap:16px;min-height:0}
+  .hero h2{font-size:24px}
+  .preview-grid{grid-template-columns:minmax(0,1fr);min-height:0}
+  .preview-box.large{min-height:240px}
+  .mini-grid{grid-template-columns:repeat(4,minmax(0,1fr));grid-template-rows:72px;gap:6px}
+  .prompt-box{font-size:13px;padding:12px;max-height:55dvh}
+  .dialog-head,.guide-body{padding:16px}
+  .dialog-head h2{font-size:20px}
+  .guide-step{gap:8px}
+}
