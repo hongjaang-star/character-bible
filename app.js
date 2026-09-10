@@ -19,9 +19,11 @@ function updatePeriods(){
   qs("period").innerHTML = (periods[country]||periods["기타"]).map(v=>`<option>${v}</option>`).join("");
 }
 
+let characterId = "CHAR_NEW_001";
+
 function currentData(){
   return {
-    character_id:"CHAR_NEW_001",
+    character_id:characterId,
     concept:{
       type:qs("type").value,
       species:qs("species").value,
@@ -222,7 +224,7 @@ reference.strength는 현재 10~95 정수를 유지하고 reference.enabled는 �
 숫자를 문자열로 바꾸지 마세요. character_id, acting, locks, reference는 현재 값 그대로 유지하세요.
 주석, 설명, 마크다운 코드 블록 없이 유효한 JSON 객체만 반환하세요.
 파일 생성이 가능하면 동일한 JSON을 UTF-8 character_bible.json 다운로드 파일로 제공하세요. 파일 생성이 불가능하면 JSON 본문만 반환하세요.
-사용자가 결과를 확인하고 설정에 수동 적용할 예정입니다.
+사용자가 결과 JSON 파일을 스튜디오에 업로드하여 설정에 적용할 예정입니다.
 
 [현재 JSON — 전체 응답 구조]
 ${JSON.stringify(base,null,2)}`;
@@ -384,3 +386,69 @@ qs("videoResult").addEventListener("error",()=>studioStatus("이 브라우저에
 [...inputs,"sceneSetting","scenePose","sceneAction","sceneEmotion","sceneCamera","sceneRatio"].forEach(id=>qs(id).addEventListener("input",refreshStudio));
 qs("country").addEventListener("change",refreshStudio);
 refreshStudio();
+
+/* Validate the complete document before touching any controls. */
+const bibleFieldPaths = {
+ type:"concept.type",species:"concept.species",country:"concept.country",period:"concept.period",cultureLevel:"concept.culture_level",
+ renderStyle:"style.render",characterStyle:"style.character_style",lineStyle:"style.line",shading:"style.shading",texture:"style.texture",palette:"style.palette",
+ silhouette:"anatomy.silhouette",headRatio:"anatomy.head_ratio",eyeRatio:"anatomy.eye_ratio",bodyRatio:"anatomy.body_ratio",
+ face:"identity.face",eyes:"identity.eyes",ears:"identity.ears",tail:"identity.tail",
+ outfit:"wardrobe.outfit",accent:"wardrobe.accent",prop:"wardrobe.prop",
+ personality:"acting.personality",expressions:"acting.expressions",motions:"acting.motions"
+};
+function validateBibleImport(data){
+  const object=x=>x!==null&&typeof x==="object"&&!Array.isArray(x);
+  function structure(value,template,path="JSON"){
+    if(Array.isArray(template)){
+      if(!Array.isArray(value)||value.some(v=>typeof v!=="string"))throw Error(path+"는 문자열 배열이어야 합니다.");
+    }else if(object(template)){
+      if(!object(value))throw Error(path+"는 객체여야 합니다.");
+      for(const key of Object.keys(template)){
+        if(!Object.hasOwn(value,key))throw Error(path+"."+key+" 항목이 없습니다.");
+        structure(value[key],template[key],path+"."+key);
+      }
+      for(const key of Object.keys(value))if(!Object.hasOwn(template,key))throw Error(path+"."+key+"는 지원하지 않는 항목입니다.");
+    }else if(typeof value!==typeof template)throw Error(path+"의 자료형이 올바르지 않습니다.");
+    else if(typeof value==="string"&&value.length>10000)throw Error(path+" 내용이 너무 깁니다.");
+  }
+  structure(data,currentData());
+  if(!data.character_id.trim())throw Error("character_id를 입력하세요.");
+  for(const [id,path] of Object.entries(bibleFieldPaths)){
+    const [group,key]=path.split(".");const value=data[group][key];const control=qs(id);
+    if(id==="period"){
+      if(!periods[data.concept.country]?.includes(value))throw Error("concept.period가 해당 국가의 시대 목록과 맞지 않습니다.");
+    }else if(control.tagName==="SELECT"&&![...control.options].some(o=>o.value===value)){
+      throw Error(path+"의 값 '"+value+"'은 지원하지 않는 선택지입니다. 분석 요청문의 허용 값으로 수정하세요.");
+    }
+    if(control.type==="range"&&(!Number.isInteger(value)||value<Number(control.min)||value>Number(control.max)))throw Error(path+"는 "+control.min+"~"+control.max+" 정수여야 합니다.");
+  }
+  if(!Number.isInteger(data.reference.strength)||data.reference.strength<10||data.reference.strength>95)throw Error("reference.strength는 10~95 정수여야 합니다.");
+  const locks=[...document.querySelectorAll(".lock")].map(x=>x.value);
+  if(data.locks.some(x=>!locks.includes(x))||new Set(data.locks).size!==data.locks.length)throw Error("locks에 지원하지 않거나 중복된 항목이 있습니다.");
+  return data;
+}
+let importVersion=0;
+qs("bibleJsonInput").addEventListener("change",async e=>{
+  const file=e.target.files[0];e.target.value="";if(!file)return;
+  const version=++importVersion;const status=qs("bibleImportStatus");
+  try{
+    if(file.size>1024*1024)throw Error("1MB 이하 JSON 파일을 선택하세요.");
+    let text=(await file.text()).replace(/^\uFEFF/,"").trim();
+    // Accept a single JSON code fence copied from an AI response.
+    if(text.startsWith("```"))text=text.replace(/^```(?:json)?\s*\n?([\s\S]*?)\n?```$/i,"$1").trim();
+    let data;try{data=JSON.parse(text);}catch{throw Error("JSON 문법을 확인하세요. 설명 문장 없이 JSON 객체만 저장해야 합니다.");}
+    validateBibleImport(data);
+    if(version!==importVersion)return;
+    qs("country").value=data.concept.country;updatePeriods();
+    for(const [id,path] of Object.entries(bibleFieldPaths)){const [group,key]=path.split(".");qs(id).value=data[group][key];}
+    characterId=data.character_id;
+    document.querySelectorAll(".lock").forEach(x=>x.checked=data.locks.includes(x.value));
+    qs("refStrength").value=data.reference.strength;
+    const mode=data.reference.enabled?"reference":"clone";
+    document.querySelectorAll(".mode").forEach(x=>x.classList.toggle("active",x.dataset.mode===mode));
+    qs("referenceSection").classList.toggle("hidden",!data.reference.enabled);
+    refresh();refreshStudio();
+    if(!qs("referenceAnalysisOutput").hidden)qs("referenceAnalysisPrompt").value=buildReferenceAnalysisPrompt();
+    status.textContent="JSON을 적용했습니다. 캐릭터 설정, 생성 프롬프트와 JSON 미리보기를 갱신했습니다.";
+  }catch(error){if(version===importVersion)status.textContent="불러오기 실패: "+error.message+" 기존 설정은 유지됩니다.";}
+});
