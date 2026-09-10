@@ -18,8 +18,13 @@
     </div>
   </header>
 
+  <nav class="mobile-nav" aria-label="작업 영역 바로가기">
+    <a href="#settings">캐릭터 설정</a>
+    <a href="#results">결과 보기</a>
+  </nav>
+
   <main class="layout">
-    <section class="workspace">
+    <section class="workspace" id="results" aria-label="캐릭터 결과">
       <div class="card hero">
         <div>
           <div class="step-badge">CHARACTER PREVIEW</div>
@@ -65,13 +70,13 @@
       </div>
     </section>
 
-    <aside class="options-panel">
+    <aside class="options-panel" id="settings" aria-label="캐릭터 설정">
       <div class="panel-header">
         <div>
           <div class="eyebrow">OPTIONS</div>
           <h2>캐릭터 설정</h2>
         </div>
-        <button id="btnReset" class="icon-btn" title="초기화">↺</button>
+        <button id="btnReset" class="icon-btn" title="초기화" aria-label="캐릭터 설정 초기화">↺</button>
       </div>
 
       <div class="mode-switch">
@@ -277,7 +282,7 @@
 
       <section class="option-section natural-edit">
         <div class="section-head"><span>10</span><h3>AI 수정 요청</h3></div>
-        <textarea id="naturalEdit" rows="4" placeholder="예: 지금 스타일은 유지하고 눈을 조금 작게, 체형은 더 날렵하게"></textarea>
+        <textarea aria-label="AI 수정 요청" id="naturalEdit" rows="4" placeholder="예: 지금 스타일은 유지하고 눈을 조금 작게, 체형은 더 날렵하게"></textarea>
         <button id="btnNaturalApply" class="btn secondary full">옵션 변경안 적용</button>
         <div class="tip"><strong>사용 팁</strong><p>자연어 수정은 잠금되지 않은 항목만 바꾸도록 설계하는 것이 안전합니다. 실제 AI 연결 시 변경 전/후 값을 먼저 보여주는 승인 단계를 권장합니다.</p></div>
       </section>
@@ -294,7 +299,7 @@
         <div class="eyebrow">QUICK GUIDE</div>
         <h2>가장 효율적인 사용법</h2>
       </div>
-      <button id="btnCloseGuide" class="icon-btn">×</button>
+      <button id="btnCloseGuide" class="icon-btn" aria-label="사용법 닫기">×</button>
     </div>
     <div class="guide-body">
       <div class="guide-step"><b>1</b><div><strong>큰 방향부터 결정</strong><p>캐릭터 유형 → 국가 → 시대 → 렌더링 스타일 → 캐릭터 표현 순으로 선택합니다.</p></div></div>
