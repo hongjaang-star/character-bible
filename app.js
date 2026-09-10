@@ -123,7 +123,7 @@ and
 ${d.acting.motions}
 
 Do not redesign the character between panels.
-Only viewpoint, facial expression and pose may change.`;
+Only viewpoint, facial expression and pose may change.${qs("naturalEdit").value.trim() ? `\n\n[USER REVISION REQUEST]\n${qs("naturalEdit").value.trim()}\n\nApply this request to the base options above. Preserve Character Lock items; for a conflict, keep the locked feature. Keep all other unspecified features consistent.` : ""}`;
 }
 
 function refresh(){
@@ -251,23 +251,28 @@ qs("openReferenceAnalysis").addEventListener("click",()=>{
   copyReferenceAnalysis();
 });
 
+qs("naturalEdit").addEventListener("input",refresh);
 qs("btnNaturalApply").addEventListener("click",()=>{
-  const t=qs("naturalEdit").value;
-  if(!t.trim()) return;
-  if(t.includes("눈") && (t.includes("작")||t.includes("줄"))) qs("eyeRatio").value=Math.max(20,Number(qs("eyeRatio").value)-12);
-  if(t.includes("날렵")) { qs("bodyRatio").value=Math.max(20,Number(qs("bodyRatio").value)-10); qs("silhouette").value="키가 크고 날렵함"; }
-  if(t.includes("목도리") && (t.includes("제거")||t.includes("없"))) qs("accent").value="없음";
-  alert("프로토타입 규칙으로 옵션 변경을 적용했습니다.");
   refresh();
+  qs("promptStatus").textContent=qs("naturalEdit").value.trim()?"수정 요청을 프롬프트에 반영했습니다. 옵션값은 유지됩니다.":"수정 요청이 비어 있습니다. 선택 옵션으로 프롬프트를 갱신했습니다.";
 });
-
 qs("btnGuide").addEventListener("click",()=>qs("guideDialog").showModal());
 qs("btnCloseGuide").addEventListener("click",()=>qs("guideDialog").close());
-qs("btnCopyPrompt").addEventListener("click",async()=>{
-  await navigator.clipboard.writeText(qs("promptPreview").textContent);
-  alert("프롬프트를 복사했습니다.");
-});
-qs("btnGeneratePrompt").addEventListener("click",refresh);
+async function refreshAndCopyPrompt(){
+  refresh();
+  try{
+    await navigator.clipboard.writeText(qs("promptPreview").textContent);
+    qs("promptStatus").textContent="선택 옵션과 수정 요청을 반영한 프롬프트를 복사했습니다.";
+  }catch{
+    const preview=qs("promptPreview");
+    const range=document.createRange();range.selectNodeContents(preview);
+    const selection=window.getSelection();selection.removeAllRanges();selection.addRange(range);
+    preview.scrollIntoView({block:"center"});
+    qs("promptStatus").textContent="자동 복사가 허용되지 않았습니다. 선택된 프롬프트를 Ctrl+C / ⌘C로 복사하세요.";
+  }
+}
+qs("btnCopyPrompt").addEventListener("click",refreshAndCopyPrompt);
+qs("btnGeneratePrompt").addEventListener("click",refreshAndCopyPrompt);
 
 qs("btnExport").addEventListener("click",()=>{
   const blob=new Blob([JSON.stringify(currentData(),null,2)],{type:"application/json"});
